@@ -67,6 +67,14 @@ class WallpaperService {
     }
   }
 
+  Future<List<Wallpaper>> loadCategory(String categoryName) async {
+    final cat = CategoryData.categories.firstWhere(
+      (c) => c.name == categoryName,
+    );
+    final (_, wallpapers) = await _loadSingleCategory(cat);
+    return wallpapers;
+  }
+
   Future<(String, List<Wallpaper>)> _loadSingleCategory(CategoryData cat) async {
     try {
       final file = await _cacheManager.getSingleFile(

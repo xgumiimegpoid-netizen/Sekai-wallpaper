@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import '../models/wallpaper.dart';
 import '../services/wallpaper_action.dart';
+import '../services/favorites_service.dart';
 import '../widgets/wallpaper_image.dart';
 
 class PreviewScreen extends StatefulWidget {
@@ -17,14 +16,41 @@ class PreviewScreen extends StatefulWidget {
 
 class _PreviewScreenState extends State<PreviewScreen> {
   final _wallpaperService = WallpaperManagerService();
+  final _favoritesService = FavoritesService();
   bool _downloading = false;
+  bool _isFavorite = false;
   String? _cachedPath;
 
   @override
+  void initState() {
+    super.initState();
+    _checkFavorite();
+    _favoritesService.addListener(_onFavoritesChanged);
+  }
+
+  @override
   void dispose() {
+    _favoritesService.removeListener(_onFavoritesChanged);
     _wallpaperService.clearCache();
     _cleanupTempFile();
     super.dispose();
+  }
+
+  void _onFavoritesChanged() {
+    if (mounted) {
+      _checkFavorite();
+    }
+  }
+
+  Future<void> _checkFavorite() async {
+    final fav = await _favoritesService.isFavorite(widget.wallpaper.id);
+    if (mounted && fav != _isFavorite) {
+      setState(() => _isFavorite = fav);
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    await _favoritesService.toggle(widget.wallpaper);
   }
 
   Future<void> _cleanupTempFile() async {
@@ -43,20 +69,11 @@ class _PreviewScreenState extends State<PreviewScreen> {
       return _cachedPath!;
     }
 
-    final response = await http.get(
-      Uri.parse(widget.wallpaper.resolvedUrl),
-      headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'},
+    final path = await _wallpaperService.downloadImageToCache(
+      widget.wallpaper.resolvedUrl,
     );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to download: ${response.statusCode}');
-    }
-
-    final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/wp_preview_${DateTime.now().millisecondsSinceEpoch}.jpg');
-    await file.writeAsBytes(response.bodyBytes);
-    _cachedPath = file.path;
-    return _cachedPath!;
+    _cachedPath = path;
+    return path;
   }
 
   Future<void> _shareWallpaper() async {
@@ -115,6 +132,17 @@ class _PreviewScreenState extends State<PreviewScreen> {
               ),
             ),
             const Divider(height: 1),
+            ListTile(
+              leading: Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorite ? Colors.red : null,
+              ),
+              title: Text(_isFavorite ? 'Quitar de Favoritos' : 'Añadir a Favoritos'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _toggleFavorite();
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.save_alt),
               title: const Text('Guardar en Galería'),
@@ -312,6 +340,14 @@ class _PreviewScreenState extends State<PreviewScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorite ? Colors.red : Colors.white70,
+            ),
+            tooltip: _isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos',
+            onPressed: _toggleFavorite,
+          ),
           IconButton(
             icon: _downloading
                 ? const SizedBox(

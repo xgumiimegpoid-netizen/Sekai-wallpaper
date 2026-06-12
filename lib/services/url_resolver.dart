@@ -1,22 +1,29 @@
 import 'package:http/http.dart' as http;
+import 'url_cache.dart';
 
 class UrlResolver {
   static Future<String> resolve(String url) async {
     final trimmed = url.trim();
 
+    final cached = await UrlCache.get(trimmed);
+    if (cached != null) return cached;
+
+    String? resolved;
+
     if (trimmed.contains('drive.google.com')) {
       final id = _extractDriveId(trimmed);
       if (id != null) {
-        return 'https://lh3.googleusercontent.com/d/$id=w1600';
+        resolved = 'https://lh3.googleusercontent.com/d/$id=w1600';
       }
+    } else if (trimmed.contains('pinterest.com') || trimmed.contains('pin.it')) {
+      resolved = await _resolvePinterest(trimmed);
     }
 
-    if (trimmed.contains('pinterest.com') || trimmed.contains('pin.it')) {
-      final resolved = await _resolvePinterest(trimmed);
-      if (resolved != null) return resolved;
+    final result = resolved ?? trimmed;
+    if (resolved != null) {
+      await UrlCache.set(trimmed, result);
     }
-
-    return trimmed;
+    return result;
   }
 
   static Future<String?> _resolvePinterest(String url) async {
@@ -43,7 +50,9 @@ class UrlResolver {
         match = regex2.firstMatch(body);
         if (match != null) return match.group(1)!;
       }
-    } catch (_) {}
+    } catch (_) {
+      return null;
+    }
     return null;
   }
 

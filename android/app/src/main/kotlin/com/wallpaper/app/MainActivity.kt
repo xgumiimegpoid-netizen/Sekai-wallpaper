@@ -2,6 +2,7 @@ package com.wallpaper.app
 
 import android.app.WallpaperManager
 import android.os.Build
+import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -77,7 +78,9 @@ class MainActivity : FlutterActivity() {
                         wallpaperManager.setStream(inputStream, null, true, WallpaperManager.FLAG_SYSTEM)
                     }
                     successCount++
-                } catch (e: Exception) { }
+                } catch (e: Exception) {
+                    Log.e("WallpaperApp", "Failed to set home screen wallpaper", e)
+                }
             }
 
             if (location == LOCK_SCREEN || location == BOTH_SCREENS) {
@@ -86,7 +89,9 @@ class MainActivity : FlutterActivity() {
                         wallpaperManager.setStream(lockStream, null, true, WallpaperManager.FLAG_LOCK)
                     }
                     successCount++
-                } catch (e: Exception) { }
+                } catch (e: Exception) {
+                    Log.e("WallpaperApp", "Failed to set lock screen wallpaper", e)
+                }
             }
         } else {
             try {
@@ -94,7 +99,9 @@ class MainActivity : FlutterActivity() {
                     wallpaperManager.setStream(inputStream)
                 }
                 successCount++
-            } catch (e: Exception) { }
+            } catch (e: Exception) {
+                Log.e("WallpaperApp", "Failed to set wallpaper (legacy)", e)
+            }
         }
 
         return successCount > 0

@@ -1,0 +1,39 @@
+# Aptoide - Información legal
+
+## Annex II: Technical and organisational measures
+
+Esta aplicación no recopila, almacena ni transmite datos personales de los usuarios. No requiere registro, inicio de sesión ni ningún tipo de identificación. Dado que no hay datos personales transferidos, no se requieren medidas técnicas u organizativas adicionales para la seguridad de dichos datos.
+
+## Transfer Risk Assessment (EU SCC 14b)
+
+La aplicación no transfiere datos personales de usuarios de la UE/EEE a terceros países, ya que no recopila ningún tipo de dato personal.
+
+## Location of Company
+
+**Desarrollador:** Individual / Chile
+**Ubicación principal:** Chile
+**Location:** Chile
+
+## Primary storage location of the data transferred
+
+No se almacenan datos de usuarios. La única data que maneja la app son las imágenes de wallpapers, alojadas en:
+
+- **GitHub** (Estados Unidos) - raw.githubusercontent.com
+- **jsDelivr CDN** (distribución global, servidores en EE.UU. y Europa)
+
+## Transmission channel
+
+- HTTPS/TLS 1.2+ para todas las conexiones (API REST sobre HTTP)
+
+## a) Local laws requiring disclosure
+
+No aplicable. El desarrollador no está sujeto a leyes que requieran la divulgación de datos personales (FISA 702 u otras). La legislación aplicable es la chilena (Ley 19.628 sobre Protección de la Vida Privada).
+
+**Is Company subject to local laws?** No / Not applicable
+**Relevant law:** Chilean Law 19.628 on Privacy Protection
+
+## b) Requests from public authorities
+
+No se han recibido solicitudes de divulgación de datos por parte de autoridades públicas en los últimos 5 años.
+
+**Requests received?** No

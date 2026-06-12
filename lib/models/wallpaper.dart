@@ -18,7 +18,7 @@ class Wallpaper {
   factory Wallpaper.fromJson(Map<String, dynamic> json, String category) {
     final id = json['id'];
     final url = json['url'];
-    if (id == null || url == null) throw FormatException('Missing id or url');
+    if (id == null || url == null) throw const FormatException('Missing id or url');
     return Wallpaper(
       id: id.toString(),
       title: json['title']?.toString() ?? 'Untitled',
