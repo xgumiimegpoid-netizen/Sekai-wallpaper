@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -31,14 +32,14 @@ class UpdateInfo {
 
 class UpdateChecker {
   // Must match the version in pubspec.yaml
-  static const String currentVersion = '1.4.0';
-  static const int currentBuildNumber = 4;
+  static const String currentVersion = '1.5.0';
+  static const int currentBuildNumber = 5;
 
   static const _versionUrl =
       'https://raw.githubusercontent.com/xgumiimegpoid-netizen/Wallpapers/DATA/version.json';
 
   static Future<File> _getSkipFile() async {
-    final dir = await getTemporaryDirectory();
+    final dir = await getApplicationDocumentsDirectory();
     return File('${dir.path}/skipped_version.json');
   }
 
@@ -50,7 +51,9 @@ class UpdateChecker {
         final data = jsonDecode(content) as Map<String, dynamic>;
         return data['version'] as String?;
       }
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('UpdateChecker._getSkippedVersion error: $e\n$stack');
+    }
     return null;
   }
 
@@ -58,7 +61,9 @@ class UpdateChecker {
     try {
       final file = await _getSkipFile();
       await file.writeAsString(jsonEncode({'version': version}));
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('UpdateChecker._skipVersion error: $e\n$stack');
+    }
   }
 
   static Future<UpdateInfo?> fetchUpdateInfo() async {
@@ -72,7 +77,8 @@ class UpdateChecker {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final info = UpdateInfo.fromJson(json);
       return info.isValid() ? info : null;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('UpdateChecker.fetchUpdateInfo error: $e\n$stack');
       return null;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'url_cache.dart';
 
@@ -34,7 +35,7 @@ class UrlResolver {
           'User-Agent':
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         },
-      );
+      ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final body = response.body;
         final regex = RegExp(
@@ -50,7 +51,8 @@ class UrlResolver {
         match = regex2.firstMatch(body);
         if (match != null) return match.group(1)!;
       }
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('UrlResolver._resolvePinterest error: $e\n$stack');
       return null;
     }
     return null;

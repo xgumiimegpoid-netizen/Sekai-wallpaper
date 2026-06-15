@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 class UrlCache {
@@ -9,7 +10,7 @@ class UrlCache {
   static Future<Map<String, String>> _load() async {
     if (_cache != null) return _cache!;
     try {
-      final dir = await getTemporaryDirectory();
+      final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/url_cache.json');
       if (await file.exists()) {
         final content = await file.readAsString();
@@ -18,7 +19,8 @@ class UrlCache {
       } else {
         _cache = {};
       }
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('UrlCache._load error: $e\n$stack');
       _cache = {};
     }
     return _cache!;
@@ -27,11 +29,13 @@ class UrlCache {
   static Future<void> _save() async {
     if (!_dirty || _cache == null) return;
     try {
-      final dir = await getTemporaryDirectory();
+      final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/url_cache.json');
       await file.writeAsString(jsonEncode(_cache));
       _dirty = false;
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('UrlCache._save error: $e\n$stack');
+    }
   }
 
   static Future<String?> get(String originalUrl) async {
@@ -43,6 +47,6 @@ class UrlCache {
     final cache = await _load();
     cache[originalUrl] = resolvedUrl;
     _dirty = true;
-    _save();
+    await _save();
   }
 }

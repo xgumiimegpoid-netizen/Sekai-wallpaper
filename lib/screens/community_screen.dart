@@ -109,7 +109,9 @@ class CommunityScreen extends StatelessWidget {
       // fallback: abrir en navegador
       try {
         await launchUrl(uri, mode: LaunchMode.platformDefault);
-      } catch (_) {}
+      } catch (e, stack) {
+        debugPrint('CommunityScreen._launchUrl error: $e\n$stack');
+      }
     }
   }
 }

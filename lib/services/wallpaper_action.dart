@@ -13,6 +13,7 @@ class WallpaperManagerService {
   static const int locationBoth = 3;
 
   final Map<String, Uint8List> _memoryCache = {};
+  static const int _maxCacheEntries = 20;
 
   static Future<bool> isPlatformSupported() async => Platform.isAndroid;
 
@@ -50,6 +51,9 @@ class WallpaperManagerService {
 
     final bytes = response.bodyBytes;
     if (useCache) {
+      if (_memoryCache.length >= _maxCacheEntries) {
+        _memoryCache.remove(_memoryCache.keys.first);
+      }
       _memoryCache[url] = bytes;
     }
     return bytes;

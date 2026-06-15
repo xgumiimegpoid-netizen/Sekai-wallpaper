@@ -45,7 +45,6 @@ wallpaper_app/
 │   ├── services/
 │   │   ├── wallpaper_service.dart             # Carga de JSONs remotos + categorías
 │   │   ├── wallpaper_action.dart              # Permisos, descarga, guardado, wallpaper nativo
-│   │   ├── native_wallpaper.dart              # Platform channel (Dart side)
 │   │   └── url_resolver.dart                  # Resuelve URLs Google Drive
 │   └── widgets/
 │       └── wallpaper_image.dart               # Widget imagen con fallbacks

@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/wallpaper.dart';
 
 class OfflineCache {
   static Future<File> _getFile() async {
-    final dir = await getTemporaryDirectory();
+    final dir = await getApplicationDocumentsDirectory();
     return File('${dir.path}/offline_wallpapers.json');
   }
 
@@ -23,7 +24,9 @@ class OfflineCache {
         }).toList(),
       ));
       await file.writeAsString(jsonEncode(data));
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('OfflineCache.save error: $e\n$stack');
+    }
   }
 
   static Future<Map<String, List<Wallpaper>>?> load() async {
@@ -38,7 +41,8 @@ class OfflineCache {
             .map((e) => Wallpaper.fromJson(e as Map<String, dynamic>, category))
             .toList(),
       ));
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('OfflineCache.load error: $e\n$stack');
       return null;
     }
   }

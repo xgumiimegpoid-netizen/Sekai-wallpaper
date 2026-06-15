@@ -232,7 +232,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
       );
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('HomeScreen._checkForUpdate error: $e\n$stack');
+    }
   }
 
   Future<void> _reloadCategory(String categoryName) async {
@@ -242,7 +244,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         _wallpapers[categoryName] = wallpapers;
         _displayCount[categoryName] = _initialLoadCount;
       });
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('HomeScreen._reloadCategory error: $e\n$stack');
+    }
   }
 
   void _loadMore(String categoryName) {
@@ -272,6 +276,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _performSearch(String query) {
+    if (!mounted) return;
     if (query.isEmpty) {
       setState(() {
         _searching = false;

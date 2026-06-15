@@ -31,7 +31,9 @@ class FavoritesService extends ChangeNotifier {
             .map((e) => Wallpaper.fromJson(e as Map<String, dynamic>, e['category'] as String? ?? ''))
             .toList();
       }
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('FavoritesService._load error: $e\n$stack');
+    }
   }
 
   Future<void> _save() async {
@@ -47,11 +49,13 @@ class FavoritesService extends ChangeNotifier {
               })
           .toList();
       await file.writeAsString(jsonEncode(data));
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('FavoritesService._save error: $e\n$stack');
+    }
   }
 
   Future<File> _getFile() async {
-    final dir = await getTemporaryDirectory();
+    final dir = await getApplicationDocumentsDirectory();
     return File('${dir.path}/favorites.json');
   }
 
