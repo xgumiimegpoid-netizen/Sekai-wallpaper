@@ -18,7 +18,7 @@ class AppDrawer extends StatelessWidget {
       wallpapers.values.fold<int>(0, (sum, list) => sum + list.length);
 
   Future<void> _openDonateLink() async {
-    final uri = Uri.parse('https://buymeacoffee.com/');
+    final uri = Uri.parse('https://ko-fi.com/yaemori02');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
