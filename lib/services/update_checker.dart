@@ -36,7 +36,7 @@ class UpdateChecker {
   static const int currentBuildNumber = 5;
 
   static const _versionUrl =
-      'https://raw.githubusercontent.com/xgumiimegpoid-netizen/Wallpapers/DATA/version.json';
+      'https://raw.githubusercontent.com/xgumiimegpoid-netizen/Sekai-wallpaper/main/version.json';
 
   static Future<File> _getSkipFile() async {
     final dir = await getApplicationDocumentsDirectory();
