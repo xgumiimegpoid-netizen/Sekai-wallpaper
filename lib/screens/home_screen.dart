@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/wallpaper.dart';
 import '../services/wallpaper_service.dart';
-import '../services/favorites_service.dart';
+import '../services/favorites_service_hive.dart';
 import '../services/offline_cache.dart';
 import '../services/update_checker.dart';
 import '../widgets/app_drawer.dart';
@@ -30,7 +30,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   final _service = WallpaperService();
   final _connectivity = Connectivity();
-  final _favoritesService = FavoritesService();
   late TabController _tabController;
   Map<String, List<Wallpaper>> _wallpapers = {};
   final Map<String, int> _displayCount = {};
@@ -52,18 +51,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _tabController = TabController(length: CategoryData.categories.length + 1, vsync: this);
     _checkConnectionAndLoad();
     _listenConnectivity();
-    _favoritesService.addListener(_onFavoritesChanged);
-    _initFavorites();
-  }
-
-  Future<void> _initFavorites() async {
-    await _favoritesService.ensureLoaded();
     _updateFavoritesCount();
   }
 
   @override
   void dispose() {
-    _favoritesService.removeListener(_onFavoritesChanged);
     _tabController.dispose();
     _searchController.dispose();
     _searchTimer?.cancel();
@@ -71,12 +63,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  void _onFavoritesChanged() {
-    _updateFavoritesCount();
-  }
-
   void _updateFavoritesCount() {
-    final count = _favoritesService.favorites.length;
+    final count = FavoritesServiceHive.getAll().length;
     if (count != _favoritesCount) {
       setState(() => _favoritesCount = count);
     }
@@ -431,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildFavoritesGrid() {
-    final favorites = _favoritesService.favorites;
+    final favorites = FavoritesServiceHive.getAll();
 
     if (favorites.isEmpty) {
       return Center(

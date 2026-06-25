@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/wallpaper.dart';
 import '../services/wallpaper_action.dart';
-import '../services/favorites_service.dart';
+import '../services/favorites_service_hive.dart';
 import '../screens/preview_screen.dart';
 
 WallpaperManagerService _service() => WallpaperManagerService();
-final _favorites = FavoritesService();
 
 Future<void> shareWallpaper(Wallpaper w) async {
   try {
@@ -65,7 +64,7 @@ void showWallpaperActions(BuildContext ctx, Wallpaper w) {
             title: const Text('Añadir a Favoritos'),
             onTap: () {
               Navigator.pop(sheetCtx);
-              _favorites.add(w);
+              FavoritesServiceHive.add(w);
               ScaffoldMessenger.of(ctx).showSnackBar(
                 const SnackBar(
                   content: Text('Añadido a favoritos'),

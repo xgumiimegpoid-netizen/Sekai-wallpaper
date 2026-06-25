@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/wallpaper.dart';
 import '../services/wallpaper_action.dart';
-import '../services/favorites_service.dart';
+import '../services/favorites_service_hive.dart';
 import '../widgets/wallpaper_image.dart';
 
 class PreviewScreen extends StatefulWidget {
@@ -16,7 +16,6 @@ class PreviewScreen extends StatefulWidget {
 
 class _PreviewScreenState extends State<PreviewScreen> {
   final _wallpaperService = WallpaperManagerService();
-  final _favoritesService = FavoritesService();
   bool _downloading = false;
   bool _isFavorite = false;
   String? _cachedPath;
@@ -25,32 +24,25 @@ class _PreviewScreenState extends State<PreviewScreen> {
   void initState() {
     super.initState();
     _checkFavorite();
-    _favoritesService.addListener(_onFavoritesChanged);
   }
 
   @override
   void dispose() {
-    _favoritesService.removeListener(_onFavoritesChanged);
     _wallpaperService.clearCache();
     _cleanupTempFile();
     super.dispose();
   }
 
-  void _onFavoritesChanged() {
-    if (mounted) {
-      _checkFavorite();
-    }
-  }
-
   Future<void> _checkFavorite() async {
-    final fav = await _favoritesService.isFavorite(widget.wallpaper.id);
+    final fav = FavoritesServiceHive.isFavorite(widget.wallpaper.id);
     if (mounted && fav != _isFavorite) {
       setState(() => _isFavorite = fav);
     }
   }
 
   Future<void> _toggleFavorite() async {
-    await _favoritesService.toggle(widget.wallpaper);
+    await FavoritesServiceHive.toggle(widget.wallpaper);
+    _checkFavorite();
   }
 
   Future<void> _cleanupTempFile() async {

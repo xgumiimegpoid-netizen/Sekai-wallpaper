@@ -1,7 +1,7 @@
 name: wallpaper_app
 description: A simple wallpaper app that loads images from URLs.
 publish_to: 'none'
-version: 1.5.0+5
+version: 1.5.1+6
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -19,6 +19,8 @@ dependencies:
   async: ^2.11.0
   url_launcher: ^6.3.1
   share_plus: ^10.1.4
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -26,6 +28,8 @@ dev_dependencies:
   flutter_lints: ^3.0.1
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.4
+  build_runner: ^2.4.0
+  hive_generator: ^2.0.1
 
 flutter:
   uses-material-design: true

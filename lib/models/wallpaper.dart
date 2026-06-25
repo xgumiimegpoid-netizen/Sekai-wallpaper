@@ -1,9 +1,25 @@
+import 'package:hive/hive.dart';
+
+part 'wallpaper.g.dart';
+
+@HiveType(typeId: 0)
 class Wallpaper {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String title;
+
+  @HiveField(2)
   final String author;
+
+  @HiveField(3)
   final String url;
+
+  @HiveField(4)
   final String category;
+
+  @HiveField(5)
   final String resolvedUrl;
 
   Wallpaper({
@@ -27,4 +43,12 @@ class Wallpaper {
       category: category,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'author': author,
+        'url': url,
+        'category': category,
+      };
 }
