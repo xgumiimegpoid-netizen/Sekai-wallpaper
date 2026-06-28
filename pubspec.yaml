@@ -1,7 +1,7 @@
 name: wallpaper_app
 description: A simple wallpaper app that loads images from URLs.
 publish_to: 'none'
-version: 1.5.1+6
+version: 1.5.0+5
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
