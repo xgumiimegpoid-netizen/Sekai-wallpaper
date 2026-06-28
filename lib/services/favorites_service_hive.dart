@@ -14,12 +14,14 @@ class FavoritesServiceHive {
     _initialized = true;
   }
 
+  static int get count => _box.length;
+
   static List<Wallpaper> getAll() {
     return _box.values.toList();
   }
 
   static bool isFavorite(String wallpaperId) {
-    return _box.values.any((w) => w.id == wallpaperId);
+    return _box.containsKey(wallpaperId);
   }
 
   static Future<void> add(Wallpaper wallpaper) async {

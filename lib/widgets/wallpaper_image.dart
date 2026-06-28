@@ -78,12 +78,16 @@ class _WallpaperImageState extends State<WallpaperImage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cacheWidth = (screenWidth / 2).round();
     return CachedNetworkImage(
       imageUrl: _urlsToTry[_currentIndex],
       key: ValueKey('${widget.wallpaper.id}-$_currentIndex'),
       fit: widget.fit,
       width: widget.width,
       height: widget.height,
+      memCacheWidth: cacheWidth,
+      memCacheHeight: (cacheWidth * 1.6).round(),
       progressIndicatorBuilder: (_, __, progress) {
         if (progress.progress == null) {
           return Container(

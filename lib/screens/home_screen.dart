@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _updateFavoritesCount() {
-    final count = FavoritesServiceHive.getAll().length;
+    final count = FavoritesServiceHive.count;
     if (count != _favoritesCount) {
       setState(() => _favoritesCount = count);
     }
