@@ -32,8 +32,8 @@ class UpdateInfo {
 
 class UpdateChecker {
   // Must match the version in pubspec.yaml
-  static const String currentVersion = '1.5.3';
-  static const int currentBuildNumber = 6;
+  static const String currentVersion = '1.5.0';
+  static const int currentBuildNumber = 5;
 
   static const _versionUrl =
       'https://raw.githubusercontent.com/xgumiimegpoid-netizen/Sekai-wallpaper/main/version.json';

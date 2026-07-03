@@ -1,6 +1,6 @@
 {
-  "latestVersion": "1.5.3",
-  "latestBuildNumber": 6,
-  "downloadUrl": "https://github.com/xgumiimegpoid-netizen/Sekai-wallpaper/releases/download/v1.5.3/app-release.apk",
-  "releaseNotes": "v1.5.3: Favoritos persistentes con Hive, eliminación de Pinterest scraping, optimización de memoria en imágenes, validación de URLs seguras, limpieza de código muerto y mejoras de rendimiento general"
+  "latestVersion": "1.5.0",
+  "latestBuildNumber": 5,
+  "downloadUrl": "https://github.com/xgumiimegpoid-netizen/Sekai-wallpaper/releases/download/v1.5.0/app-release.apk",
+  "releaseNotes": "Mejoras críticas y altas: almacenamiento persistente de datos, logging en errores, accesibilidad con Semantics, fix infinite scroll, límite de caché en memoria, eliminación de código duplicado"
 }
