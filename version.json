@@ -1,6 +1,6 @@
 {
-  "latestVersion": "1.5.1",
-  "latestBuildNumber": 6,
-  "downloadUrl": "https://github.com/xgumiimegpoid-netizen/Sekai-wallpaper/releases/download/v1.5.1/app-release.apk",
-  "releaseNotes": "Corregido crash al abrir la app causado por el doble registro del adaptador de Hive."
+  "latestVersion": "1.5.2",
+  "latestBuildNumber": 7,
+  "downloadUrl": "https://github.com/xgumiimegpoid-netizen/Sekai-wallpaper/releases/download/v1.5.2/app-release.apk",
+  "releaseNotes": "Mejorada la calidad de las previsualizaciones y la visualización en pantalla completa."
 }

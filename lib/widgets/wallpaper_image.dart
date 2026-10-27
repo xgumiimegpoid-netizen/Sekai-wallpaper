@@ -7,6 +7,7 @@ class WallpaperImage extends StatefulWidget {
   final BoxFit fit;
   final double? width;
   final double? height;
+  final bool thumbnail;
 
   const WallpaperImage({
     super.key,
@@ -14,6 +15,7 @@ class WallpaperImage extends StatefulWidget {
     this.fit = BoxFit.cover,
     this.width,
     this.height,
+    this.thumbnail = true,
   });
 
   @override
@@ -26,23 +28,46 @@ class _WallpaperImageState extends State<WallpaperImage> {
   bool _hasTriedNext = false;
 
   @override
+  @override
   void initState() {
     super.initState();
     _urlsToTry = _buildUrlList();
   }
 
   List<String> _buildUrlList() {
-    final urls = <String>[widget.wallpaper.resolvedUrl];
+    final urls = <String>[];
+    final resolved = widget.wallpaper.resolvedUrl;
     final original = widget.wallpaper.url;
-    if (!urls.contains(original)) urls.add(original);
 
-    if (original.contains('drive.google.com')) {
-      final id = _extractDriveId(original);
-      if (id != null) {
-        final thumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w800';
-        if (!urls.contains(thumbUrl)) urls.add(thumbUrl);
-        final ucUrl = 'https://drive.google.com/uc?export=view&id=$id';
-        if (!urls.contains(ucUrl)) urls.add(ucUrl);
+    if (widget.thumbnail) {
+      if (resolved.isNotEmpty && !urls.contains(resolved)) urls.add(resolved);
+      if (original.isNotEmpty && !urls.contains(original)) urls.add(original);
+
+      if (original.contains('drive.google.com')) {
+        final id = _extractDriveId(original);
+        if (id != null) {
+          final thumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w1024';
+          if (!urls.contains(thumbUrl)) urls.add(thumbUrl);
+          final largeThumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w1600';
+          if (!urls.contains(largeThumbUrl)) urls.add(largeThumbUrl);
+          final ucUrl = 'https://drive.google.com/uc?export=view&id=$id';
+          if (!urls.contains(ucUrl)) urls.add(ucUrl);
+        }
+      }
+    } else {
+      if (resolved.isNotEmpty && !urls.contains(resolved)) urls.add(resolved);
+      if (original.isNotEmpty && !urls.contains(original)) urls.add(original);
+
+      if (original.contains('drive.google.com')) {
+        final id = _extractDriveId(original);
+        if (id != null) {
+          final ucUrl = 'https://drive.google.com/uc?export=view&id=$id';
+          if (!urls.contains(ucUrl)) urls.add(ucUrl);
+          final thumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w2048';
+          if (!urls.contains(thumbUrl)) urls.add(thumbUrl);
+          final largerThumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w4096';
+          if (!urls.contains(largerThumbUrl)) urls.add(largerThumbUrl);
+        }
       }
     }
     return urls;
@@ -79,7 +104,11 @@ class _WallpaperImageState extends State<WallpaperImage> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final cacheWidth = (screenWidth / 2).round();
+    final dpr = MediaQuery.of(context).devicePixelRatio;
+    final cacheWidth = widget.thumbnail
+        ? ((screenWidth / 2) * dpr * 1.5).round().clamp(600, 1600)
+        : null;
+
     return CachedNetworkImage(
       imageUrl: _urlsToTry[_currentIndex],
       key: ValueKey('${widget.wallpaper.id}-$_currentIndex'),
@@ -87,7 +116,9 @@ class _WallpaperImageState extends State<WallpaperImage> {
       width: widget.width,
       height: widget.height,
       memCacheWidth: cacheWidth,
-      memCacheHeight: (cacheWidth * 1.6).round(),
+      memCacheHeight: widget.thumbnail && cacheWidth != null
+          ? (cacheWidth / 0.6).round()
+          : null,
       progressIndicatorBuilder: (_, __, progress) {
         if (progress.progress == null) {
           return Container(

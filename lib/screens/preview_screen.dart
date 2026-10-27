@@ -371,6 +371,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
           child: WallpaperImage(
             wallpaper: widget.wallpaper,
             fit: BoxFit.contain,
+            thumbnail: false,
           ),
         ),
       ),
