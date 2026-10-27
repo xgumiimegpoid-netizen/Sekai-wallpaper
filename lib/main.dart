@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'models/wallpaper.dart';
 import 'screens/home_screen.dart';
 import 'services/favorites_service_hive.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(WallpaperAdapter());
   await FavoritesServiceHive.init();
   runApp(const WallpaperApp());
 }
