@@ -19,7 +19,15 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "setWallpaper") {
+            if (call.method == "getAppVersion") {
+                @Suppress("DEPRECATION")
+                val info = packageManager.getPackageInfo(packageName, 0)
+                @Suppress("DEPRECATION")
+                val code = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else info.versionCode.toLong()
+                result.success(hashMapOf("version" to info.versionName, "build" to code))
+            } else if (call.method == "getSdkVersion") {
+                result.success(Build.VERSION.SDK_INT)
+            } else if (call.method == "setWallpaper") {
                 val path = call.argument<String>("path")
                 val location = call.argument<Int>("location") ?: HOME_SCREEN
 
@@ -33,28 +41,30 @@ class MainActivity : FlutterActivity() {
                     return@setMethodCallHandler
                 }
 
+                Thread {
                 try {
                     val success = setWallpaperFromPath(path, location)
                     if (success) {
-                        result.success(
+                        runOnUiThread { result.success(
                             hashMapOf("success" to true)
-                        )
+                        ) }
                     } else {
-                        result.success(
+                        runOnUiThread { result.success(
                             hashMapOf(
                                 "success" to false,
-                                "error" to "Failed to set wallpaper"
+                                "error" to "No se pudo aplicar el fondo a todas las pantallas seleccionadas"
                             )
-                        )
+                        ) }
                     }
                 } catch (e: Exception) {
-                    result.success(
+                    runOnUiThread { result.success(
                         hashMapOf(
                             "success" to false,
                             "error" to (e.message ?: "Unknown error")
                         )
-                    )
+                    ) }
                 }
+                }.start()
             } else {
                 result.notImplemented()
             }
@@ -104,6 +114,6 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        return successCount > 0
+        return successCount == if (location == BOTH_SCREENS) 2 else 1
     }
 }

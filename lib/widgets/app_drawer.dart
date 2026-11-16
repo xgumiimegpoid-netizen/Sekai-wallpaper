@@ -3,15 +3,18 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/wallpaper.dart';
 import '../services/wallpaper_service.dart';
 import '../screens/community_screen.dart';
+import '../screens/appearance_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final Map<String, List<Wallpaper>> wallpapers;
   final void Function(int index) onCategoryTap;
+  final VoidCallback onCheckUpdates;
 
   const AppDrawer({
     super.key,
     required this.wallpapers,
     required this.onCategoryTap,
+    required this.onCheckUpdates,
   });
 
   int get _totalCount =>
@@ -86,7 +89,8 @@ class AppDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
                     'Categorías',
                     style: TextStyle(
@@ -95,6 +99,26 @@ class AppDrawer extends StatelessWidget {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.palette_outlined),
+                  title: const Text('Apariencia'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AppearanceScreen()));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.system_update_outlined),
+                  title: const Text('Buscar actualizaciones'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onCheckUpdates();
+                  },
                 ),
                 ...CategoryData.categories.asMap().entries.map((entry) {
                   final index = entry.key;
@@ -105,9 +129,13 @@ class AppDrawer extends StatelessWidget {
                     title: Text(cat.name),
                     trailing: count > 0
                         ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(

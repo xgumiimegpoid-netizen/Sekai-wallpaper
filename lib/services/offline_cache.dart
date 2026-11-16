@@ -14,15 +14,18 @@ class OfflineCache {
     try {
       final file = await _getFile();
       final data = wallpapers.map((category, list) => MapEntry(
-        category,
-        list.map((w) => {
-          'id': w.id,
-          'title': w.title,
-          'author': w.author,
-          'url': w.url,
-          'category': w.category,
-        }).toList(),
-      ));
+            category,
+            list
+                .map((w) => {
+                      'id': w.id,
+                      'title': w.title,
+                      'author': w.author,
+                      'url': w.url,
+                      'resolvedUrl': w.resolvedUrl,
+                      'category': w.category,
+                    })
+                .toList(),
+          ));
       await file.writeAsString(jsonEncode(data));
     } catch (e, stack) {
       debugPrint('OfflineCache.save error: $e\n$stack');
@@ -36,11 +39,12 @@ class OfflineCache {
       final content = await file.readAsString();
       final decoded = jsonDecode(content) as Map<String, dynamic>;
       return decoded.map((category, list) => MapEntry(
-        category,
-        (list as List<dynamic>)
-            .map((e) => Wallpaper.fromJson(e as Map<String, dynamic>, category))
-            .toList(),
-      ));
+            category,
+            (list as List<dynamic>)
+                .map((e) =>
+                    Wallpaper.fromJson(e as Map<String, dynamic>, category))
+                .toList(),
+          ));
     } catch (e, stack) {
       debugPrint('OfflineCache.load error: $e\n$stack');
       return null;

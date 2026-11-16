@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/wallpaper.dart';
+import '../services/image_sources.dart';
 
 class WallpaperImage extends StatefulWidget {
   final Wallpaper wallpaper;
@@ -28,10 +29,21 @@ class _WallpaperImageState extends State<WallpaperImage> {
   bool _hasTriedNext = false;
 
   @override
-  @override
   void initState() {
     super.initState();
     _urlsToTry = _buildUrlList();
+  }
+
+  @override
+  void didUpdateWidget(covariant WallpaperImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.wallpaper.url != widget.wallpaper.url ||
+        oldWidget.wallpaper.resolvedUrl != widget.wallpaper.resolvedUrl ||
+        oldWidget.thumbnail != widget.thumbnail) {
+      _urlsToTry = _buildUrlList();
+      _currentIndex = 0;
+      _hasTriedNext = false;
+    }
   }
 
   List<String> _buildUrlList() {
@@ -48,7 +60,8 @@ class _WallpaperImageState extends State<WallpaperImage> {
         if (id != null) {
           final thumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w1024';
           if (!urls.contains(thumbUrl)) urls.add(thumbUrl);
-          final largeThumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w1600';
+          final largeThumbUrl =
+              'https://drive.google.com/thumbnail?id=$id&sz=w1600';
           if (!urls.contains(largeThumbUrl)) urls.add(largeThumbUrl);
           final ucUrl = 'https://drive.google.com/uc?export=view&id=$id';
           if (!urls.contains(ucUrl)) urls.add(ucUrl);
@@ -65,12 +78,13 @@ class _WallpaperImageState extends State<WallpaperImage> {
           if (!urls.contains(ucUrl)) urls.add(ucUrl);
           final thumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w2048';
           if (!urls.contains(thumbUrl)) urls.add(thumbUrl);
-          final largerThumbUrl = 'https://drive.google.com/thumbnail?id=$id&sz=w4096';
+          final largerThumbUrl =
+              'https://drive.google.com/thumbnail?id=$id&sz=w4096';
           if (!urls.contains(largerThumbUrl)) urls.add(largerThumbUrl);
         }
       }
     }
-    return urls;
+    return urls.isEmpty ? [''] : urls.expand(imageSources).toSet().toList();
   }
 
   String? _extractDriveId(String url) {
@@ -116,14 +130,14 @@ class _WallpaperImageState extends State<WallpaperImage> {
       width: widget.width,
       height: widget.height,
       memCacheWidth: cacheWidth,
-      memCacheHeight: widget.thumbnail && cacheWidth != null
-          ? (cacheWidth / 0.6).round()
-          : null,
+      // Decode with one dimension so Flutter preserves the source aspect ratio.
+      // BoxFit.cover crops the decoded image to the card without stretching it.
       progressIndicatorBuilder: (_, __, progress) {
         if (progress.progress == null) {
           return Container(
             color: Colors.grey[900],
-            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            child:
+                const Center(child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
         return Container(
@@ -149,7 +163,8 @@ class _WallpaperImageState extends State<WallpaperImage> {
             children: [
               Icon(Icons.broken_image, color: Colors.white54, size: 40),
               SizedBox(height: 4),
-              Text('Error', style: TextStyle(color: Colors.white54, fontSize: 12)),
+              Text('Error',
+                  style: TextStyle(color: Colors.white54, fontSize: 12)),
             ],
           ),
         );

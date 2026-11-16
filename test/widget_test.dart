@@ -30,4 +30,22 @@ void main() {
     expect(wp.category, 'Paisajes');
     expect(wp.resolvedUrl, wp.url);
   });
+  test('Offline serialization preserves resolved Drive URLs', () {
+    final wallpaper = Wallpaper(
+      id: 'drive-1',
+      title: 'Drive',
+      author: 'Author',
+      url: 'https://drive.google.com/file/d/example/view',
+      category: 'Anime',
+      resolvedUrl: 'https://lh3.googleusercontent.com/d/example=w1600',
+    );
+    final restored = Wallpaper.fromJson(wallpaper.toJson(), wallpaper.category);
+    expect(restored.resolvedUrl, wallpaper.resolvedUrl);
+    expect(restored.url, wallpaper.url);
+  });
+
+  test('Wallpaper rejects missing required fields', () {
+    expect(() => Wallpaper.fromJson({'id': 'missing-url'}, 'Anime'),
+        throwsFormatException);
+  });
 }

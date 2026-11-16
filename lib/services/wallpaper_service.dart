@@ -3,24 +3,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../models/wallpaper.dart';
 import 'url_resolver.dart';
+import 'offline_cache.dart';
 
 class CategoryData {
   final String name;
   final String url;
   final IconData icon;
 
-  const CategoryData({required this.name, required this.url, required this.icon});
+  const CategoryData(
+      {required this.name, required this.url, required this.icon});
 
-  static const baseUrl = 'https://raw.githubusercontent.com/xgumiimegpoid-netizen/Wallpapers/DATA';
+  static const baseUrl =
+      'https://raw.githubusercontent.com/xgumiimegpoid-netizen/Wallpapers/DATA';
 
   static const categories = [
-    CategoryData(name: 'Anime', url: '$baseUrl/anime.json', icon: Icons.auto_awesome),
-    CategoryData(name: 'Paisajes', url: '$baseUrl/paisajes.json', icon: Icons.landscape),
-    CategoryData(name: 'Cyberpunk', url: '$baseUrl/cyberpunk.json', icon: Icons.electric_bolt),
-    CategoryData(name: 'Fantasy/Sci-Fi', url: '$baseUrl/fantasy_scifi.json', icon: Icons.auto_awesome),
-    CategoryData(name: 'Pokemon', url: '$baseUrl/pokemon.json', icon: Icons.catching_pokemon),
-    CategoryData(name: 'Juegos', url: '$baseUrl/juegos.json', icon: Icons.sports_esports),
-    CategoryData(name: 'Comunidad', url: '$baseUrl/community.json', icon: Icons.groups),
+    CategoryData(
+        name: 'Anime', url: '$baseUrl/anime.json', icon: Icons.auto_awesome),
+    CategoryData(
+        name: 'Paisajes', url: '$baseUrl/paisajes.json', icon: Icons.landscape),
+    CategoryData(
+        name: 'Cyberpunk',
+        url: '$baseUrl/cyberpunk.json',
+        icon: Icons.electric_bolt),
+    CategoryData(
+        name: 'Fantasy/Sci-Fi',
+        url: '$baseUrl/fantasy_scifi.json',
+        icon: Icons.auto_awesome),
+    CategoryData(
+        name: 'Pokemon',
+        url: '$baseUrl/pokemon.json',
+        icon: Icons.catching_pokemon),
+    CategoryData(
+        name: 'Juegos',
+        url: '$baseUrl/juegos.json',
+        icon: Icons.sports_esports),
+    CategoryData(
+        name: 'Comunidad', url: '$baseUrl/community.json', icon: Icons.groups),
   ];
 }
 
@@ -34,7 +52,14 @@ class WallpaperService {
   );
 
   Future<Map<String, List<Wallpaper>>> loadAll() async {
-    final futures = CategoryData.categories.map((cat) => _loadSingleCategory(cat));
+    final futures = CategoryData.categories.map((cat) async {
+      try {
+        return await _loadSingleCategory(cat);
+      } catch (_) {
+        final cached = await OfflineCache.load();
+        return (cat.name, cached?[cat.name] ?? <Wallpaper>[]);
+      }
+    });
     final results = await Future.wait(futures);
 
     final map = <String, List<Wallpaper>>{};
@@ -75,12 +100,15 @@ class WallpaperService {
     return wallpapers;
   }
 
-  Future<(String, List<Wallpaper>)> _loadSingleCategory(CategoryData cat) async {
+  Future<(String, List<Wallpaper>)> _loadSingleCategory(
+      CategoryData cat) async {
     try {
-      final file = await _cacheManager.getSingleFile(
-        cat.url,
-        key: cat.name,
-      ).timeout(const Duration(seconds: 15));
+      final file = await _cacheManager
+          .getSingleFile(
+            cat.url,
+            key: cat.name,
+          )
+          .timeout(const Duration(seconds: 15));
 
       final jsonString = await file.readAsString();
       final list = jsonDecode(jsonString) as List<dynamic>;
@@ -102,7 +130,7 @@ class WallpaperService {
       return (cat.name, wallpapers.reversed.toList());
     } catch (e) {
       debugPrint('Error loading category ${cat.name}: $e');
-      return (cat.name, <Wallpaper>[]);
+      rethrow;
     }
   }
 }

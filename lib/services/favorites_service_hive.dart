@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/foundation.dart';
 import '../models/wallpaper.dart';
 
 class FavoritesServiceHive {
@@ -13,6 +14,8 @@ class FavoritesServiceHive {
     _box = await Hive.openBox<Wallpaper>(_boxName);
     _initialized = true;
   }
+
+  static ValueListenable<Box<Wallpaper>> get listenable => _box.listenable();
 
   static int get count => _box.length;
 

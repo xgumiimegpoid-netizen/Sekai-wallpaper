@@ -3,6 +3,7 @@ import '../models/wallpaper.dart';
 import '../widgets/wallpaper_image.dart';
 import '../widgets/wallpaper_actions.dart';
 import '../screens/preview_screen.dart';
+import '../theme/app_theme.dart';
 
 class CategoryGrid extends StatefulWidget {
   final String categoryName;
@@ -81,35 +82,38 @@ class _CategoryGridState extends State<CategoryGrid> {
       );
     }
 
+    final liquid = ThemeScope.of(context).liquid;
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
       child: CustomScrollView(
         controller: _scrollController,
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(liquid ? 16 : 8),
             sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
+                crossAxisSpacing: liquid ? 12 : 8,
+                mainAxisSpacing: liquid ? 12 : 8,
                 childAspectRatio: 0.6,
               ),
               delegate: SliverChildBuilderDelegate(
                 (ctx, i) {
                   final w = widget.displayedList[i];
                   return Semantics(
-                    label: '${w.title}${w.author.isNotEmpty ? " por ${w.author}" : ""}',
+                    label:
+                        '${w.title}${w.author.isNotEmpty ? " por ${w.author}" : ""}',
                     onTapHint: 'Abrir vista previa',
                     onLongPressHint: 'Mostrar acciones',
                     child: GestureDetector(
                       onTap: () => Navigator.push(
                         ctx,
-                        MaterialPageRoute(builder: (_) => PreviewScreen(wallpaper: w)),
+                        MaterialPageRoute(
+                            builder: (_) => PreviewScreen(wallpaper: w)),
                       ),
                       onLongPress: () => showWallpaperActions(ctx, w),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(liquid ? 18 : 12),
                         child: WallpaperImage(wallpaper: w),
                       ),
                     ),
@@ -140,7 +144,8 @@ class _CategoryGridState extends State<CategoryGrid> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, size: 16, color: Colors.grey[600]),
+                      Icon(Icons.check_circle,
+                          size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 8),
                       Text(
                         'Mostrando los ${widget.totalCount} wallpapers de ${widget.categoryName}',

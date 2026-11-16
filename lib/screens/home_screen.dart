@@ -11,6 +11,7 @@ import '../widgets/category_grid.dart';
 import '../widgets/search_results.dart';
 import '../widgets/wallpaper_image.dart';
 import 'preview_screen.dart';
+import '../theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,10 +20,13 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   static const int _initialLoadCount = 12;
   static const int _loadMoreIncrement = 8;
   void _navigateToCategory(int categoryIndex) {
+    Navigator.pop(context);
+    _searchTimer?.cancel();
     setState(() => _searching = false);
     _searchController.clear();
     _tabController.animateTo(categoryIndex + 1);
@@ -38,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _searching = false;
   bool _hasError = false;
   bool _isOffline = false;
-  bool _checkedForUpdate = false;
+  bool _checkingUpdate = false;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchTimer;
@@ -48,19 +52,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: CategoryData.categories.length + 1, vsync: this);
+    _tabController = TabController(
+        length: CategoryData.categories.length + 1,
+        initialIndex: 1,
+        vsync: this);
+    FavoritesServiceHive.listenable.addListener(_onFavoritesChanged);
     _checkConnectionAndLoad();
     _listenConnectivity();
     _updateFavoritesCount();
+    _checkForUpdate();
   }
 
   @override
   void dispose() {
+    FavoritesServiceHive.listenable.removeListener(_onFavoritesChanged);
     _tabController.dispose();
     _searchController.dispose();
     _searchTimer?.cancel();
     _connectivitySub?.cancel();
     super.dispose();
+  }
+
+  void _onFavoritesChanged() {
+    if (!mounted) return;
+    setState(() => _favoritesCount = FavoritesServiceHive.count);
   }
 
   void _updateFavoritesCount() {
@@ -77,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   void _listenConnectivity() {
     _connectivitySub = _connectivity.onConnectivityChanged.listen((result) {
-      if (!result.contains(ConnectivityResult.none) && (_hasError || _isOffline)) {
+      if (!result.contains(ConnectivityResult.none) &&
+          (_hasError || _isOffline)) {
         _load();
       }
     });
@@ -85,8 +101,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _checkConnectionAndLoad() async {
     final hasConnection = await _hasInternetConnection();
+    if (!mounted) return;
     if (!hasConnection) {
       final cached = await OfflineCache.load();
+      if (!mounted) return;
       if (cached != null && cached.isNotEmpty) {
         setState(() {
           _wallpapers = cached;
@@ -125,31 +143,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     try {
       final data = await _service.loadAll();
-      final totalWallpapers = data.values.fold<int>(0, (sum, list) => sum + list.length);
+      final totalWallpapers =
+          data.values.fold<int>(0, (sum, list) => sum + list.length);
 
       if (totalWallpapers == 0) {
-        setState(() {
-          _wallpapers = data;
-          _loading = false;
-          _hasError = true;
-          _errorMessage = 'No se pudieron cargar los wallpapers';
-        });
-        return;
+        throw StateError('No se pudieron cargar los wallpapers');
       }
 
       await OfflineCache.save(data);
+      if (!mounted) return;
 
       setState(() {
         _wallpapers = data;
         _loading = false;
         _hasError = false;
       });
-      if (!_checkedForUpdate) {
-        _checkedForUpdate = true;
-        _checkForUpdate();
-      }
     } catch (e) {
       final cached = await OfflineCache.load();
+      if (!mounted) return;
       if (cached != null && cached.isNotEmpty) {
         setState(() {
           _wallpapers = cached;
@@ -167,12 +178,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
-  Future<void> _checkForUpdate() async {
+  Future<void> _checkForUpdate({bool manual = false}) async {
+    if (_checkingUpdate) return;
+    _checkingUpdate = true;
     try {
       final info = await UpdateChecker.fetchUpdateInfo();
-      if (info == null || !mounted) return;
-      if (!await UpdateChecker.hasUpdate(info)) return;
-      if (!await UpdateChecker.shouldShowUpdate(info)) return;
+      if (!mounted) return;
+      if (info == null) {
+        if (manual) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  'No se pudo comprobar la actualización. Revisa tu conexión e inténtalo de nuevo.')));
+        }
+        return;
+      }
+      if (!await UpdateChecker.hasUpdate(info)) {
+        if (manual && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Ya tienes la última versión publicada.')));
+        }
+        return;
+      }
+      if (!manual && !await UpdateChecker.shouldShowUpdate(info)) return;
       if (!mounted) return;
 
       await showDialog(
@@ -183,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             children: [
               Icon(Icons.system_update, color: Colors.blue),
               SizedBox(width: 8),
-              Text('Actualización disponible'),
+              Expanded(child: Text('Actualización disponible')),
             ],
           ),
           content: Column(
@@ -202,7 +229,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             TextButton(
               onPressed: () {
                 Navigator.pop(ctx);
-                UpdateChecker.markSkipped(info.latestVersion);
+                UpdateChecker.markSkipped(
+                    '${info.latestVersion}+${info.latestBuildNumber}');
               },
               child: const Text('Omitir esta versión'),
             ),
@@ -222,12 +250,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       );
     } catch (e, stack) {
       debugPrint('HomeScreen._checkForUpdate error: $e\n$stack');
+    } finally {
+      _checkingUpdate = false;
     }
   }
 
   Future<void> _reloadCategory(String categoryName) async {
     try {
       final wallpapers = await _service.loadCategory(categoryName);
+      if (!mounted) return;
       setState(() {
         _wallpapers[categoryName] = wallpapers;
         _displayCount[categoryName] = _initialLoadCount;
@@ -300,23 +331,32 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final liquid = ThemeScope.of(context).liquid;
+    final ink = Theme.of(context).colorScheme.onSurface;
     return Scaffold(
       drawer: AppDrawer(
         wallpapers: _wallpapers,
         onCategoryTap: _navigateToCategory,
+        onCheckUpdates: () => _checkForUpdate(manual: true),
       ),
       appBar: AppBar(
-        title: _searching
+        flexibleSpace: liquid
+            ? const GlassPanel(radius: 0, child: SizedBox.expand())
+            : null,
+        title: _searching && !liquid
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: liquid ? ink : Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Buscar por título, autor, categoría...',
-                  hintStyle: const TextStyle(color: Colors.white70),
+                  hintStyle: TextStyle(
+                      color: liquid
+                          ? ink.withValues(alpha: 0.65)
+                          : Colors.white70),
                   border: InputBorder.none,
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.white),
+                    icon: Icon(Icons.clear, color: liquid ? ink : Colors.white),
                     onPressed: () {
                       _searchController.clear();
                       _search('');
@@ -327,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               )
             : const Text('Wallpapers'),
         actions: [
-          if (!_searching)
+          if (!_searching && !liquid)
             IconButton(
               icon: const Icon(Icons.search),
               tooltip: 'Buscar',
@@ -342,76 +382,118 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               onPressed: _load,
             ),
         ],
-        bottom: _searching || _hasError
+        bottom: (_searching && !liquid) || _hasError
             ? null
-            : TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                dividerColor: Colors.transparent,
-                tabs: [
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.favorite, size: 18, color: Colors.red),
-                        const SizedBox(width: 6),
-                        const Text('Favoritos'),
-                        if (_favoritesCount > 0) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
+            : PreferredSize(
+                preferredSize: Size.fromHeight(liquid ? 120 : 48),
+                child: Column(
+                  children: [
+                    if (liquid)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                        child: GlassPanel(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Buscar wallpapers',
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _searchController.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'Limpiar búsqueda',
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _search('');
+                                      },
+                                    ),
                             ),
-                            child: Text(
-                              '$_favoritesCount',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.red,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            onChanged: _search,
                           ),
-                        ],
+                        ),
+                      ),
+                    TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      dividerColor: Colors.transparent,
+                      tabs: [
+                        Tab(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.favorite,
+                                  size: 18, color: Colors.red),
+                              const SizedBox(width: 6),
+                              const Text('Favoritos'),
+                              if (_favoritesCount > 0) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '$_favoritesCount',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        ...CategoryData.categories.map((c) {
+                          final total = _wallpapers[c.name]?.length ?? 0;
+                          final shown =
+                              _displayCount[c.name] ?? _initialLoadCount;
+                          final displayTotal = shown < total
+                              ? '$shown/$total'
+                              : (total > 0 ? '$total' : '');
+
+                          return Tab(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(c.icon, size: 18),
+                                const SizedBox(width: 6),
+                                Text(c.name),
+                                if (displayTotal.isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      displayTotal,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        }),
                       ],
                     ),
-                  ),
-                  ...CategoryData.categories.map((c) {
-                    final total = _wallpapers[c.name]?.length ?? 0;
-                    final shown = _displayCount[c.name] ?? _initialLoadCount;
-                    final displayTotal = shown < total ? '$shown/$total' : (total > 0 ? '$total' : '');
-
-                    return Tab(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(c.icon, size: 18),
-                          const SizedBox(width: 6),
-                          Text(c.name),
-                          if (displayTotal.isNotEmpty) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                displayTotal,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  }),
-                ],
+                  ],
+                ),
               ),
       ),
       body: _buildBody(),
@@ -549,7 +631,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               _buildFavoritesGrid(),
               ...CategoryData.categories.map((cat) {
                 final fullList = _wallpapers[cat.name] ?? [];
-                final displayLimit = _displayCount[cat.name] ?? _initialLoadCount;
+                final displayLimit =
+                    _displayCount[cat.name] ?? _initialLoadCount;
                 final displayedList = fullList.take(displayLimit).toList();
                 final hasMore = displayLimit < fullList.length;
 

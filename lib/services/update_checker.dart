@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -27,13 +28,20 @@ class UpdateInfo {
     );
   }
 
-  bool isValid() => latestVersion.isNotEmpty && downloadUrl.isNotEmpty;
+  bool isValid() {
+    final uri = Uri.tryParse(downloadUrl);
+    return RegExp(r'^\d+\.\d+\.\d+$').hasMatch(latestVersion) &&
+        latestBuildNumber > 0 &&
+        uri != null &&
+        uri.scheme == 'https' &&
+        uri.host.isNotEmpty;
+  }
 }
 
 class UpdateChecker {
   // Must match the version in pubspec.yaml
-  static const String currentVersion = '1.5.2';
-  static const int currentBuildNumber = 7;
+  static const String currentVersion = '1.5.3';
+  static const int currentBuildNumber = 8;
 
   static const _versionUrl =
       'https://raw.githubusercontent.com/xgumiimegpoid-netizen/Sekai-wallpaper/main/version.json';
@@ -68,9 +76,13 @@ class UpdateChecker {
 
   static Future<UpdateInfo?> fetchUpdateInfo() async {
     try {
-      final response = await http
-          .get(Uri.parse(_versionUrl))
-          .timeout(const Duration(seconds: 10));
+      final response = await http.get(
+          Uri.parse(_versionUrl).replace(queryParameters: {
+            't': DateTime.now().millisecondsSinceEpoch.toString()
+          }),
+          headers: {
+            'Cache-Control': 'no-cache'
+          }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200) return null;
 
@@ -84,12 +96,21 @@ class UpdateChecker {
   }
 
   static Future<bool> hasUpdate(UpdateInfo info) async {
-    if (info.latestBuildNumber > currentBuildNumber) return true;
-    if (info.latestBuildNumber == currentBuildNumber &&
-        _compareVersions(info.latestVersion, currentVersion) > 0) {
-      return true;
+    final installed = await installedVersion();
+    return info.latestBuildNumber > installed.$2;
+  }
+
+  static Future<(String, int)> installedVersion() async {
+    try {
+      final info = await const MethodChannel('com.wallpaper.app/wallpaper')
+          .invokeMapMethod<String, dynamic>('getAppVersion');
+      if (info?['version'] is String && info?['build'] is int) {
+        return (info!['version'] as String, info['build'] as int);
+      }
+    } on MissingPluginException {
+      // Desktop previews and tests have no Android package metadata.
     }
-    return false;
+    return (currentVersion, currentBuildNumber);
   }
 
   static bool _isVersionNewer(String latest, String skipped) {
@@ -110,6 +131,10 @@ class UpdateChecker {
   static Future<bool> shouldShowUpdate(UpdateInfo info) async {
     final skipped = await _getSkippedVersion();
     if (skipped == null) return true;
+    final parts = skipped.split('+');
+    if (parts.length == 2) {
+      return info.latestBuildNumber > (int.tryParse(parts[1]) ?? 0);
+    }
     return _isVersionNewer(info.latestVersion, skipped);
   }
 
@@ -119,7 +144,7 @@ class UpdateChecker {
 
   static Future<void> launchDownload(String url) async {
     final uri = Uri.parse(url);
-    if (uri.scheme != 'https') return;
+    if (uri.scheme != 'https' || uri.host.isEmpty) return;
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
