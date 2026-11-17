@@ -38,6 +38,10 @@ class CategoryData {
         url: '$baseUrl/juegos.json',
         icon: Icons.sports_esports),
     CategoryData(
+        name: 'PFP',
+        url: '$baseUrl/pfp.json',
+        icon: Icons.account_box_outlined),
+    CategoryData(
         name: 'Comunidad', url: '$baseUrl/community.json', icon: Icons.groups),
   ];
 }

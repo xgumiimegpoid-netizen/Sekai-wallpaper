@@ -14,8 +14,6 @@ class SearchResults extends StatelessWidget {
     required this.query,
   });
 
-
-
   @override
   Widget build(BuildContext context) {
     if (results.isEmpty) {
@@ -48,7 +46,8 @@ class SearchResults extends StatelessWidget {
           color: Theme.of(context).colorScheme.surfaceContainerLow,
           child: Row(
             children: [
-              Icon(Icons.search, size: 16, color: Theme.of(context).colorScheme.primary),
+              Icon(Icons.search,
+                  size: 16, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 '${results.length} resultado${results.length == 1 ? '' : 's'}',
@@ -64,23 +63,26 @@ class SearchResults extends StatelessWidget {
         Expanded(
           child: GridView.builder(
             padding: const EdgeInsets.all(8),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
-              childAspectRatio: 0.6,
+              childAspectRatio:
+                  results.every((w) => w.category == 'PFP') ? 1 : 0.6,
             ),
             itemCount: results.length,
             itemBuilder: (ctx, i) {
               final w = results[i];
               return Semantics(
-                label: '${w.title}${w.author.isNotEmpty ? " por ${w.author}" : ""} — ${w.category}',
+                label:
+                    '${w.title}${w.author.isNotEmpty ? " por ${w.author}" : ""} — ${w.category}',
                 onTapHint: 'Abrir vista previa',
                 onLongPressHint: 'Mostrar acciones',
                 child: GestureDetector(
                   onTap: () => Navigator.push(
                     ctx,
-                    MaterialPageRoute(builder: (_) => PreviewScreen(wallpaper: w)),
+                    MaterialPageRoute(
+                        builder: (_) => PreviewScreen(wallpaper: w)),
                   ),
                   onLongPress: () => showWallpaperActions(ctx, w),
                   child: Stack(
@@ -94,7 +96,8 @@ class SearchResults extends StatelessWidget {
                         left: 0,
                         right: 0,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.bottomCenter,

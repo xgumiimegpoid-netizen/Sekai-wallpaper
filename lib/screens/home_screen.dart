@@ -529,11 +529,12 @@ class _HomeScreenState extends State<HomeScreen>
       onRefresh: () async => _updateFavoritesCount(),
       child: GridView.builder(
         padding: const EdgeInsets.all(8),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 8,
           mainAxisSpacing: 8,
-          childAspectRatio: 0.6,
+          childAspectRatio:
+              favorites.every((w) => w.category == 'PFP') ? 1 : 0.6,
         ),
         itemCount: favorites.length,
         itemBuilder: (ctx, i) {

@@ -123,7 +123,7 @@ class _WallpaperImageState extends State<WallpaperImage> {
         ? ((screenWidth / 2) * dpr * 1.5).round().clamp(600, 1600)
         : null;
 
-    return CachedNetworkImage(
+    final image = CachedNetworkImage(
       imageUrl: _urlsToTry[_currentIndex],
       key: ValueKey('${widget.wallpaper.id}-$_currentIndex'),
       fit: widget.fit,
@@ -170,5 +170,16 @@ class _WallpaperImageState extends State<WallpaperImage> {
         );
       },
     );
+    if (widget.thumbnail && widget.wallpaper.category == 'PFP') {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: AspectRatio(
+          aspectRatio: 1,
+          child:
+              ClipRRect(borderRadius: BorderRadius.circular(12), child: image),
+        ),
+      );
+    }
+    return image;
   }
 }

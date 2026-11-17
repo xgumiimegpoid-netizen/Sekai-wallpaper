@@ -19,6 +19,26 @@ void main() {
   setUp(() {
     CachedNetworkImageProvider.defaultCacheManager = EmptyCache();
   });
+  testWidgets('PFP stays square even inside a portrait favorites card',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+        home: Center(
+            child: SizedBox(
+      width: 180,
+      height: 300,
+      child: WallpaperImage(
+          wallpaper: Wallpaper(
+              id: 'pfp',
+              title: 'Perfil',
+              author: '',
+              url: '',
+              category: 'PFP')),
+    ))));
+    expect(
+        tester.getSize(find.byType(CachedNetworkImage)), const Size(180, 180));
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('Portrait and landscape thumbnails retain source proportions',
       (tester) async {
     final wallpaper = Wallpaper(

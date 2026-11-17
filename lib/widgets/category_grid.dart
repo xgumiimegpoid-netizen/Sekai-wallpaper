@@ -76,7 +76,9 @@ class _CategoryGridState extends State<CategoryGrid> {
           children: [
             Icon(Icons.image_not_supported, size: 48, color: Colors.grey[600]),
             const SizedBox(height: 12),
-            Text('No wallpapers en ${widget.categoryName}'),
+            Text(widget.categoryName == 'PFP'
+                ? 'Aún no hay fotos de perfil'
+                : 'No wallpapers en ${widget.categoryName}'),
           ],
         ),
       );
@@ -95,7 +97,7 @@ class _CategoryGridState extends State<CategoryGrid> {
                 crossAxisCount: 2,
                 crossAxisSpacing: liquid ? 12 : 8,
                 mainAxisSpacing: liquid ? 12 : 8,
-                childAspectRatio: 0.6,
+                childAspectRatio: widget.categoryName == 'PFP' ? 1 : 0.6,
               ),
               delegate: SliverChildBuilderDelegate(
                 (ctx, i) {

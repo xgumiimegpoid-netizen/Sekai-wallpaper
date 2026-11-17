@@ -92,33 +92,13 @@ class AppDrawer extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
-                    'Categorías',
+                    'Secciones',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.palette_outlined),
-                  title: const Text('Apariencia'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const AppearanceScreen()));
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.system_update_outlined),
-                  title: const Text('Buscar actualizaciones'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    onCheckUpdates();
-                  },
                 ),
                 ...CategoryData.categories.asMap().entries.map((entry) {
                   final index = entry.key;
@@ -151,13 +131,43 @@ class AppDrawer extends StatelessWidget {
                     onTap: () => onCategoryTap(index),
                   );
                 }),
+                const Divider(),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text('Ajustes',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.primary)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.palette_outlined),
+                  title: const Text('Apariencia'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AppearanceScreen()));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.system_update_outlined),
+                  title: const Text('Buscar actualizaciones'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onCheckUpdates();
+                  },
+                ),
               ],
             ),
           ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.groups),
-            title: const Text('Comunidad'),
+            title: const Text('Compartir con la comunidad'),
             subtitle: const Text('Comparte tus wallpapers'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
